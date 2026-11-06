@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "SimpleProductCRUD": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:65505;http://localhost:65506"
+    }
+  }
+}

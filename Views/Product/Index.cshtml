@@ -1,0 +1,160 @@
+@{
+    ViewData["Title"] = "Product CRUD";
+}
+
+<div>
+    <h2>Product CRUD</h2>
+
+    <form id="productForm">
+        <div>
+            <label for="Id">ID</label>
+            <input type="number" id="Id" name="Id"
+                   min="1" step="1" required />
+        </div>
+
+        <div>
+            <label for="Name">Name</label>
+            <input type="text" id="Name" name="Name"
+                   required />
+        </div>
+
+        <div>
+            <label for="Price">Price</label>
+            <input type="number" id="Price" name="Price"
+                   min="0.01" step="0.01" required />
+        </div>
+
+        <div>
+            <button type="submit" id="saveButton">
+                Insert
+            </button>
+
+  
+        </div>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Created Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        let isEditing = false;
+
+        $(document).ready(function () {
+            loadProducts();
+
+            $("#productForm").submit(function (e) {
+                e.preventDefault();
+
+                const url = isEditing
+                    ? "/Product/Update"
+                    : "/Product/Create";
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {
+                        Id: $("#Id").val(),
+                        Name: $("#Name").val(),
+                        Price: $("#Price").val()
+                    },
+                    success: function () {
+                        clearForm();
+                        loadProducts();
+                    }
+                });
+            });
+
+            $("#cancelButton").click(function () {
+                clearForm();
+            });
+        });
+
+ 
+        function loadProducts() {
+            $.ajax({
+                url: "/Product/GetAll",
+                type: "GET",
+                success: function (products) {
+                    let rows = "";
+
+                    $.each(products, function (index, product) {
+                        rows += `
+                                <tr>
+                                    <td>${product.id}</td>
+                                    <td>${escapeHtml(product.name)}</td>
+                                    <td>${Number(product.price).toFixed(2)}</td>
+                                    <td>${new Date(product.createdDate).toLocaleString()}</td>
+                                    <td>
+                                        <button type="button"
+                                                onclick="editProduct(${product.id})">
+                                            Edit
+                                        </button>
+
+                                        <button type="button"
+                                                onclick="deleteProduct(${product.id})">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>`;
+                    });
+
+                    $("#productTable").html(rows);
+                }
+            });
+        }
+
+    
+        function editProduct(id) {
+            $.ajax({
+                url: "/Product/GetById",
+                type: "GET",
+                data: { id: id },
+                success: function (product) {
+                    $("#Id").val(product.id);
+                    $("#Name").val(product.name);
+                    $("#Price").val(product.price);
+
+                    isEditing = true;
+                    $("#saveButton").text("Update");
+                }
+            });
+        }
+
+     
+        function deleteProduct(id) {
+            $.ajax({
+                url: "/Product/Delete",
+                type: "POST",
+                data: { id: id },
+                success: function () {
+                    clearForm();
+                    loadProducts();
+                }
+            });
+        }
+
+
+        function clearForm() {
+            $("#productForm")[0].reset();
+            isEditing = false;
+            $("#saveButton").text("Insert");
+        }
+
+
+        function escapeHtml(value) {
+            return $("<div>").text(value ?? "").html();
+        }
+    </script>
+}
